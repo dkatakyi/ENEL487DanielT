@@ -77,15 +77,18 @@ void printResult(ComplexNumbers result);
 int main() {
 
     inData.open("data.txt");
+    if (inData)
+    {
     outData.open("output.txt");
+    }
     
     char choice = 'c';
     float oneReal, oneImgy, twoReal, twoImgy;
     
-    cout << "Type a letter to specify the arithmetic operator (A, S, M, D)";
-    cout << endl;
-    cout << "followed by two complex numbers expressed as pairs of doubles.";
-    cout << endl << "Type Q to quit." << endl;
+    cerr << "Type a letter to specify the arithmetic operator (A, S, M, D)";
+    cerr << endl;
+    cerr << "followed by two complex numbers expressed as pairs of doubles.";
+    cerr << endl << "Type Q to quit." << endl;
     
     do
     {
@@ -105,7 +108,7 @@ int main() {
         }
         else
         {
-            cout << "Enter exp: ";
+            cerr << "Enter exp: ";
             cin >> choice;
             if (choice == 'q' || choice == 'Q')
             {
