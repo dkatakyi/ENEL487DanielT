@@ -91,38 +91,39 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  int j;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  strcpy((char *)cliBufferTX, "\nTesting CLI:\r\n");
-  HAL_UART_Transmit(&huart2, cliBufferTX, strlen((char *)cliBufferTX), 1000);
 
   while (1)
   {
-/*	  if(HAL_UART_Receive(&huart2, cliBufferRX, 1, 300) == HAL_OK)
-	  {
-		  cliBufferTX[0] = cliBufferRX[0];
-		  cliBufferTX[1] = '\r';
-		  cliBufferTX[2] = '\n';
-		  HAL_UART_Transmit(&huart2, cliBufferTX, 3, 1000);
-	  }
-*/
+	  j = 0;
+
 	  strcpy((char *)cliBufferTX, "\nEnter a command for the LED:\r\n");
 	  HAL_UART_Transmit(&huart2, cliBufferTX, strlen((char *)cliBufferTX), 1000);
-	  int j = 0;
 
 	  do
 	  {
 		  if(HAL_UART_Receive(&huart2, cliBufferRX, 1, 300) == HAL_OK)
 		  {
-			  cliBufferTX[0] = cliBufferRX[0];
-			  save[j] = cliBufferRX[0];
-			  HAL_UART_Transmit(&huart2, cliBufferTX, 1, 1000);
-
-			  j++;
+			  if(cliBufferRX[0] == '\b')
+			  {
+				  cliBufferTX[0] = cliBufferRX[0];
+				  cliBufferTX[1] = ' ';
+				  cliBufferTX[2] = '\b';
+				  HAL_UART_Transmit(&huart2, cliBufferTX, 3, 1000);
+				  j--;
+			  }
+			  else
+			  {
+				  cliBufferTX[0] = cliBufferRX[0];
+				  save[j] = cliBufferRX[0];
+				  HAL_UART_Transmit(&huart2, cliBufferTX, 1, 1000);
+				  j++;
+			  }
 		  }
 	  } while(cliBufferTX[0] != '\r');
 
@@ -158,6 +159,10 @@ int main(void)
 			  strcpy((char *)cliBufferTX, "\nThe LED is off!\r\n");
 		  }
 		  HAL_UART_Transmit(&huart2, cliBufferTX, strlen((char *)cliBufferTX), 1000);
+	  }
+	  else if(save[0] == '\r')
+	  {
+		  continue;
 	  }
 	  else
 	  {
