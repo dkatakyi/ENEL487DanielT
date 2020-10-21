@@ -45,36 +45,32 @@ void executeCommand(char recBuffer[20])
 {
 	  if(recBuffer[0] == 'h' && recBuffer[1] == 'e' && recBuffer[2] == 'l' && recBuffer[3] == 'p' && recBuffer[4] == '\r')
 	  {
-		  strcpy((char *)recBuffer, "\n1. \"ledon\" turns the green LED on\r\n");
-		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 3000);
-		  strcpy((char *)recBuffer, "\n2. \"ledoff\" turns the green LED off\r\n");
-		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 3000);
-		  strcpy((char *)recBuffer, "\n3. \"ledquery\" returns the state of the green LED\r\n");
-		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 3000);
+		  printString("\n1. \"ledon\" turns the green LED on\r\n");
+		  printString("\n2. \"ledoff\" turns the green LED off\r\n");
+		  printString("\n3. \"ledquery\" returns the state of the green LED\r\n");
+
 	  }
 	  else if(recBuffer[0] == 'l' && recBuffer[1] == 'e' && recBuffer[2] == 'd' && recBuffer[3] == 'o' && recBuffer[4] == 'n' && recBuffer[5] == '\r')
 	  {
-		  strcpy((char *)recBuffer, "\nDone!\r\n");
-		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 1000);
+		  printString("\nDone!\r\n");
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 	  }
 	  else if(recBuffer[0] == 'l' && recBuffer[1] == 'e' && recBuffer[2] == 'd' && recBuffer[3] == 'o' && recBuffer[4] == 'f' && recBuffer[5] == 'f' && recBuffer[6] == '\r')
 	  {
-		  strcpy((char *)recBuffer, "\nDone!\r\n");
-		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 1000);
+		  printString("\nDone!\r\n");
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 	  }
 	  else if(recBuffer[0] == 'l' && recBuffer[1] == 'e' && recBuffer[2] == 'd' && recBuffer[3] == 'q' && recBuffer[4] == 'u' && recBuffer[5] == 'e' && recBuffer[6] == 'r' && recBuffer[7] == 'y' && recBuffer[8] == '\r')
 	  {
 		  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5) == 0x1)
 		  {
-			  strcpy((char *)recBuffer, "\nThe LED is on!\r\n");
+			  printString("\nThe LED is on!\r\n");
 		  }
 		  else
 		  {
-			  strcpy((char *)recBuffer, "\nThe LED is off!\r\n");
+			  printString("\nThe LED is off!\r\n");
 		  }
-		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 1000);
+
 	  }
 	  else if(recBuffer[0] == '\r')
 	  {
