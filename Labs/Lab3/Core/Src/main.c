@@ -22,7 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "CLI.h"
+#include <string.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +45,11 @@
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
+
+uint8_t cliBufferTX[56];
+uint8_t cliBufferRX[10];
+uint8_t save[20];
+int j;
 
 /* USER CODE END PV */
 
@@ -89,6 +96,14 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  //Start the process of receiving data
+  HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
+
+  //Print out Welcome Message
+  strcpy((char *)cliBufferTX, "\nWelcome to the CLI!\r\n");
+  HAL_UART_Transmit(&huart3, cliBufferTX, strlen((char *)cliBufferTX), 1000);
+
 
   /* USER CODE END 2 */
 
@@ -197,6 +212,40 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
+{
+
+	HAL_UART_Transmit(&huart3, cliBufferRX, 1, 1000);
+	copyCharTo(cliBufferRX, save, j);
+	j++;
+	if(isCompleteLine(cliBufferRX))
+	{
+		HAL_UART_Transmit(&huart3, "\r\n", 2, 1000);
+		strcpy((char *)cliBufferTX, save);
+		//HAL_UART_Transmit(&huart3, cliBufferTX, strlen((char *)cliBufferTX), 1000);
+
+		executeCommand(save);
+		HAL_UART_Transmit(&huart3, "\r\n", 2, 1000);
+		j = 0;
+		for(int i = 0; i < 20; i++)
+		{
+			save[i] = NULL;
+		}
+	}
+
+
+
+	while(huart3.gState == HAL_UART_STATE_BUSY_RX){}
+
+	HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
+}
+
+void printStringBlocking(const char * message)
+{
+
+}
+
 
 /* USER CODE END 4 */
 
