@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "CLI.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 /* USER CODE END Includes */
@@ -51,7 +52,7 @@ uint8_t cliBufferRX[10];
 uint8_t save[20];
 int j = 0;
 int counter = 0;
-
+uint8_t counter_str[20];
 
 const char *CLEAR_SCREEN = "\x1b[2J";
 const char *SCROLL_WINDOW = "\x1b[10;r";
@@ -109,9 +110,9 @@ int main(void)
   //Print out Welcome Message
   printString(CLEAR_SCREEN);
   printString(GO_TO_TOP);
-  printString("\nWelcome to the CLI!\r\n");
+  printString("Welcome to the CLI!\r\n");
 
-  HAL_Delay(5000);
+  HAL_Delay(2000);
 
   printString(CLEAR_SCREEN);
   printString(GO_TO_TOP);
@@ -129,7 +130,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	HAL_Delay(1000);
+	counter++;
+	//sprintf(counter_str, counter);
+	//printString(counter_str);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
