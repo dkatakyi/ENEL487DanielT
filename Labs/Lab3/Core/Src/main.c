@@ -49,7 +49,15 @@ UART_HandleTypeDef huart3;
 uint8_t cliBufferTX[56];
 uint8_t cliBufferRX[10];
 uint8_t save[20];
-int j;
+int j = 0;
+int counter = 0;
+
+
+const char *CLEAR_SCREEN = "\x1b[2J";
+const char *SCROLL_WINDOW = "\x1b[10;r";
+const char *GO_TO_SCROLL = "\x1b[10;0H";
+const char *GO_TO_TOP = "\x1b[0;0H";
+
 
 /* USER CODE END PV */
 
@@ -97,13 +105,22 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  //Start the process of receiving data
-  HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
 
   //Print out Welcome Message
-  strcpy((char *)cliBufferTX, "\nWelcome to the CLI!\r\n");
-  HAL_UART_Transmit(&huart3, cliBufferTX, strlen((char *)cliBufferTX), 1000);
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("\nWelcome to the CLI!\r\n");
 
+  HAL_Delay(5000);
+
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("Test");
+  printString(SCROLL_WINDOW);
+  printString(GO_TO_SCROLL);
+
+  //Start the process of receiving data
+  HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
 
   /* USER CODE END 2 */
 

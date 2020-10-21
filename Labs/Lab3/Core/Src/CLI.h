@@ -13,8 +13,6 @@
 #include <stdbool.h>
 
 extern uint8_t cliBufferTX[56];
-//uint8_t cliBufferRX[10];
-;
 extern UART_HandleTypeDef huart3;
 
 uint8_t* welcomeMessage();
