@@ -216,9 +216,18 @@ static void MX_GPIO_Init(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 {
 
-	HAL_UART_Transmit(&huart3, cliBufferRX, 1, 1000);
+	//HAL_UART_Transmit(&huart3, cliBufferRX, 1, 1000);
 	copyCharTo(cliBufferRX, save, j);
-	j++;
+
+	if(cliBufferRX[0] == '\b')
+	{
+		j--;
+	}
+	else
+	{
+		j++;
+	}
+
 	if(isCompleteLine(cliBufferRX))
 	{
 		HAL_UART_Transmit(&huart3, "\r\n", 2, 1000);

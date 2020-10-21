@@ -29,16 +29,18 @@ bool isCompleteLine(char recBuffer[10])
 
 void copyCharTo(char recBuffer[10], char s[20], int coun)
 {
-//	int i;
 
-	//go to the point after the last char in the buffer
-//	for(i = 0; s[i] != NULL; i++)
-//	{
-//		continue;
-//	}
+		  if(recBuffer[0] == '\b')
+		  {
+			  printString("\b \b");
 
-	//copy new character into empty buffer spot
-	s[coun] = recBuffer[0];
+		  }
+		  else
+		  {
+			  s[coun] = recBuffer[0];
+			  printString(recBuffer);
+
+		  }
 }
 //
 void executeCommand(char recBuffer[20])
