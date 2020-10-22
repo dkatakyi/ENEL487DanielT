@@ -122,7 +122,7 @@ int main(void)
 
   //Start the process of receiving data
   HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
-
+  printString("\nEnter a command for the LED:\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -262,6 +262,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 		{
 			save[i] = NULL;
 		}
+		printString("\nEnter a command for the LED:\r\n");
 	}
 
 
@@ -269,6 +270,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 	while(huart3.gState == HAL_UART_STATE_BUSY_RX){}
 
 	HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
+
 }
 
 void printStringBlocking(const char * message)

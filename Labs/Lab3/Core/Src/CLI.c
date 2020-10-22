@@ -42,7 +42,7 @@ void copyCharTo(char recBuffer[10], char s[20], int coun)
 
 		  }
 }
-//
+
 void executeCommand(char recBuffer[20])
 {
 	  if(recBuffer[0] == 'h' && recBuffer[1] == 'e' && recBuffer[2] == 'l' && recBuffer[3] == 'p' && recBuffer[4] == '\r')
