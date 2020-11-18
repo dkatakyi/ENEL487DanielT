@@ -34,9 +34,7 @@ In the current version there are five commands:
 
 Errors
 
--When you repeatedly type in "timetest", after numerous entries the program will lock.
--Very rarely the "timetest" operation will give results of all 0. Once the previous 
- error came about this one hasn't been seen since.
+-On certain accesses to the "timetest" operation, it will give results of all 0.
 
 
 TIMING RESULTS FOR VARIOUS OPTIMIZATIONS

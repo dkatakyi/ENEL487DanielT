@@ -9,6 +9,17 @@
 #include "TimingTest.h"
 
 
+	volatile double timA32 = 0;
+	volatile double timA64 = 0;
+	volatile double timM32 = 0;
+	volatile double timM64 = 0;
+	volatile double timD32 = 0;
+	volatile double timD64 = 0;
+	volatile double timStrc8 = 0;
+	volatile double timStrc128 = 0;
+	volatile double timStrc1024 = 0;
+
+
 uint32_t rand32()
 {
 	return (rand() | (rand() << 15) | ((rand() & 0x6000) << 17));
@@ -101,15 +112,15 @@ void runTime()
 		dst1024.dat[k] = 0;
 	}
 
-	volatile double timA32 = 0;
-	volatile double timA64 = 0;
-	volatile double timM32 = 0;
-	volatile double timM64 = 0;
-	volatile double timD32 = 0;
-	volatile double timD64 = 0;
-	volatile double timStrc8 = 0;
-	volatile double timStrc128 = 0;
-	volatile double timStrc1024 = 0;
+	timA32 = 0;
+	timA64 = 0;
+	timM32 = 0;
+	timM64 = 0;
+	timD32 = 0;
+	timD64 = 0;
+	timStrc8 = 0;
+	timStrc128 = 0;
+	timStrc1024 = 0;
 
 	uint8_t textTX[56];
 
