@@ -122,7 +122,7 @@ int main(void)
   //Print out Welcome Message
   printString(CLEAR_SCREEN);
   printString(GO_TO_TOP);
-  printString("\x1b[8;40;100t");
+  //printString("\x1b[8;40;100t");
   //printString("\x1b[3;0;0t");
   printString("Welcome to the CLI!\r\n");
   HAL_Delay(2000);
