@@ -8,6 +8,7 @@
 
 #include "TimingTest.h"
 
+
 uint32_t rand32()
 {
 	return (rand() | (rand() << 15) | ((rand() & 0x6000) << 17));
@@ -15,7 +16,14 @@ uint32_t rand32()
 
 uint64_t rand64()
 {
-	return (rand() | (rand() << 15) | (rand() << 30) | (rand() << 45) | ((rand() & 0xF000) << 49));
+	uint64_t x;
+	x = rand();
+	x |= (rand() << 15);
+	x |= (rand() << 30);
+	x |= (rand() << 45);
+	x |= ((rand() & 0xF000) << 49);
+	return x;
+	//return (rand() | (rand() << 15) | (rand() << 30) | (rand() << 45) | ((rand() & 0xF000) << 49));
 }
 
 uint32_t add32(uint32_t op1, uint32_t op2)

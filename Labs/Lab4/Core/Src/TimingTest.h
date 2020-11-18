@@ -28,6 +28,4 @@ uint32_t div32(uint32_t op1, uint32_t op2);
 
 uint64_t div64(uint64_t op1, uint64_t op2);
 
-
-
 #endif /* SRC_TIMINGTEST_H_ */

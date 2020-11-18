@@ -24,6 +24,9 @@
 /* USER CODE BEGIN Includes */
 #include "timer.h"
 #include "TimingTest.h"
+#include "time.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,17 +49,9 @@ TIM_HandleTypeDef htim4;
 /* USER CODE BEGIN PV */
 int num = 0;
 uint16_t volatile timStart;
-double timA32 = 0;
-double timA64 = 0;
-double timM32 = 0;
-double timM64 = 0;
-double timD32 = 0;
-double timD64 = 0;
-double timStrc8 = 0;
-double timStrc128 = 0;
-double timStrc1024 = 0;
 uint32_t operand1, operand2;
 uint64_t operand3, operand4;
+
 struct strc8
 {
 	int dat[2];
@@ -91,9 +86,33 @@ static void MX_TIM4_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  struct strc8 src8, dst8;
-  struct strc128 src128, dst128;
-  struct strc1024 src1024, dst1024;
+  static struct strc8 src8, dst8;
+  static struct strc128 src128, dst128;
+  static struct strc1024 src1024, dst1024;
+
+  for(int k = 0; k < 2; k++)
+  {
+	  dst8.dat[k] = 0;
+  }
+  for(int k = 0; k < 32; k++)
+  {
+	  dst128.dat[k] = 0;
+  }
+  for(int k = 0; k < 256; k++)
+  {
+	  dst1024.dat[k] = 0;
+  }
+
+  static double timA32 = 0;
+  static double timA64 = 0;
+  static double timM32 = 0;
+  static double timM64 = 0;
+  static double timD32 = 0;
+  static double timD64 = 0;
+  static double timStrc8 = 0;
+  static double timStrc128 = 0;
+  static double timStrc1024 = 0;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -117,12 +136,27 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
+  srand(timer_start());
+
   while (num < 100)
   {
 	  operand1 = rand32();
 	  operand2 = rand32();
 	  operand3 = rand64();
 	  operand4 = rand64();
+
+	  for(int k = 0; k < 2; k++)
+	  {
+		  src8.dat[k] = rand();
+	  }
+	  for(int k = 0; k < 32; k++)
+	  {
+		  src128.dat[k] = rand();
+	  }
+	  for(int k = 0; k < 256; k++)
+	  {
+		  src1024.dat[k] = rand();
+	  }
 
 	  timStart = timer_start();
 	  add32(operand1, operand2);
@@ -163,7 +197,7 @@ int main(void)
 	  num++;
   }
 
-  timA32 = timA32 / 8000 / 100;
+  timA32 = timA32 / 8000 / 100;					//divide by 8000 to get milliseconds, and divide by 100 to get average trial
   timA64 = timA64 / 8000 / 100;
   timM32 = timM32 / 8000 / 100;
   timM64 = timM64 / 8000 / 100;
@@ -187,7 +221,7 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
+  * @brief System Clock Configuration)
   * @retval None
   */
 void SystemClock_Config(void)
