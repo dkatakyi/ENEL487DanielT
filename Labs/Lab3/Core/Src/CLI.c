@@ -7,13 +7,6 @@
 
 #include "CLI.h"
 
-uint8_t* welcomeMessage()
-{
-	//strcpy((char *)cliBufferTX, "\nWelcome to the CLI!\r\n");
-
-	return "\nWelcome to the CLI!\r\n";
-}
-
 bool isCompleteLine(char recBuffer[10])
 {
 	//if enter was hit, then it is a complete line, else it isnt
@@ -83,6 +76,20 @@ void executeCommand(char recBuffer[20])
 		  strcpy((char *)recBuffer, "\nError. Try again.\r\n");
 		  HAL_UART_Transmit(&huart3, recBuffer, strlen((char *)recBuffer), 1000);
 	  }
+}
+
+char * goTo(int r, int c)
+{
+	char * row_str;
+	char * col_str;
+	sprintf(row_str, "%d", r);
+	sprintf(col_str, "%d", c);
+	char * msg = "\x1b[";
+	strcat(msg, row_str);
+	strcat(msg, ";");
+	strcat(msg, col_str);
+	strcat(msg, "H");
+	return msg;
 }
 
 void printString(const char* mess)

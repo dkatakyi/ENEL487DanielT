@@ -58,7 +58,11 @@ const char *CLEAR_SCREEN = "\x1b[2J";
 const char *SCROLL_WINDOW = "\x1b[10;r";
 const char *GO_TO_SCROLL = "\x1b[10;0H";
 const char *GO_TO_TOP = "\x1b[0;0H";
-
+const char *GO_TO_COUNT = "\x1b[0;10H";
+const char *HIDE_CURS = "\x1b[?25l";
+const char *SHOW_CURS = "\x1b[?25h";
+const char *SAVE_CURS = "\x1b[s";
+const char *RETURN_CURS = "\x1b[u";
 
 /* USER CODE END PV */
 
@@ -114,26 +118,36 @@ int main(void)
 
   HAL_Delay(2000);
 
+  //Formats the screen to show counter and create a scroll window
   printString(CLEAR_SCREEN);
   printString(GO_TO_TOP);
-  printString("Test");
+  printString("counter: ");
   printString(SCROLL_WINDOW);
   printString(GO_TO_SCROLL);
+
+  //printString(goTo(10, 0));
 
   //Start the process of receiving data
   HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
   printString("\nEnter a command for the LED:\r\n");
+  printString(SAVE_CURS);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+	//increment counter and display it approx. every 1 second
 	HAL_Delay(1000);
 	counter++;
-	//sprintf(counter_str, counter);
-	//printString(counter_str);
+	sprintf(counter_str, "%d", counter);
+	printString(HIDE_CURS);
+	printString(GO_TO_COUNT);
+	printString(counter_str);
+
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -236,10 +250,13 @@ static void MX_GPIO_Init(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 {
-
+	counter++;
+	printString(RETURN_CURS);
+	printString(SHOW_CURS);
 	//HAL_UART_Transmit(&huart3, cliBufferRX, 1, 1000);
 	copyCharTo(cliBufferRX, save, j);
 
+	//backspace incidence
 	if(cliBufferRX[0] == '\b')
 	{
 		j--;
@@ -249,6 +266,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 		j++;
 	}
 
+	//when enter is hit execute the command
 	if(isCompleteLine(cliBufferRX))
 	{
 		HAL_UART_Transmit(&huart3, "\r\n", 2, 1000);
@@ -265,7 +283,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 		printString("\nEnter a command for the LED:\r\n");
 	}
 
-
+	printString(SAVE_CURS);
 
 	while(huart3.gState == HAL_UART_STATE_BUSY_RX){}
 
@@ -273,10 +291,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
 
 }
 
-void printStringBlocking(const char * message)
-{
-
-}
 
 
 /* USER CODE END 4 */

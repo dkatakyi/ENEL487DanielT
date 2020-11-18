@@ -15,13 +15,13 @@
 extern uint8_t cliBufferTX[56];
 extern UART_HandleTypeDef huart3;
 
-uint8_t* welcomeMessage();
-
 bool isCompleteLine(char recBuffer[10]);
 
 void copyCharTo(char recBuffer[10], char s[20], int coun);
 
 void executeCommand(char recBuffer[]);
+
+char * goTo(int r, int c);
 
 void printString(const char* mess);
 
