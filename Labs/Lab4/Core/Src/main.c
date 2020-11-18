@@ -25,6 +25,10 @@
 #include "timer.h"
 #include "TimingTest.h"
 #include "time.h"
+#include "CLI.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 
 
 /* USER CODE END Includes */
@@ -46,30 +50,33 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim4;
 
-/* USER CODE BEGIN PV */
-int num = 0;
-uint16_t volatile timStart;
-uint32_t operand1, operand2;
-uint64_t operand3, operand4;
+UART_HandleTypeDef huart3;
 
-struct strc8
-{
-	int dat[2];
-};
-struct strc128
-{
-	int dat[32];
-};
-struct strc1024
-{
-	int dat[256];
-};
+/* USER CODE BEGIN PV */
+
+uint8_t cliBufferTX[56];
+uint8_t cliBufferRX[10];
+uint8_t save[20];
+int j = 0;
+int counter = 0;
+uint8_t counter_str[20];
+const char *CLEAR_SCREEN = "\x1b[2J";
+const char *SCROLL_WINDOW = "\x1b[10;r";
+const char *GO_TO_SCROLL = "\x1b[10;0H";
+const char *GO_TO_TOP = "\x1b[0;0H";
+const char *GO_TO_COUNT = "\x1b[0;10H";
+const char *HIDE_CURS = "\x1b[?25l";
+const char *SHOW_CURS = "\x1b[?25h";
+const char *SAVE_CURS = "\x1b[s";
+const char *RETURN_CURS = "\x1b[u";
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -86,32 +93,7 @@ static void MX_TIM4_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  static struct strc8 src8, dst8;
-  static struct strc128 src128, dst128;
-  static struct strc1024 src1024, dst1024;
 
-  for(int k = 0; k < 2; k++)
-  {
-	  dst8.dat[k] = 0;
-  }
-  for(int k = 0; k < 32; k++)
-  {
-	  dst128.dat[k] = 0;
-  }
-  for(int k = 0; k < 256; k++)
-  {
-	  dst1024.dat[k] = 0;
-  }
-
-  static double timA32 = 0;
-  static double timA64 = 0;
-  static double timM32 = 0;
-  static double timM64 = 0;
-  static double timD32 = 0;
-  static double timD64 = 0;
-  static double timStrc8 = 0;
-  static double timStrc128 = 0;
-  static double timStrc1024 = 0;
 
   /* USER CODE END 1 */
 
@@ -134,78 +116,30 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM4_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  srand(timer_start());
+  //Print out Welcome Message
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("\x1b[8;40;100t");
+  //printString("\x1b[3;0;0t");
+  printString("Welcome to the CLI!\r\n");
+  HAL_Delay(2000);
 
-  while (num < 100)
-  {
-	  operand1 = rand32();
-	  operand2 = rand32();
-	  operand3 = rand64();
-	  operand4 = rand64();
+  //Formats the screen to show counter and create a scroll window
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("counter: ");
+  printString(SCROLL_WINDOW);
+  printString(GO_TO_SCROLL);
 
-	  for(int k = 0; k < 2; k++)
-	  {
-		  src8.dat[k] = rand();
-	  }
-	  for(int k = 0; k < 32; k++)
-	  {
-		  src128.dat[k] = rand();
-	  }
-	  for(int k = 0; k < 256; k++)
-	  {
-		  src1024.dat[k] = rand();
-	  }
+  //printString(goTo(10, 0));
 
-	  timStart = timer_start();
-	  add32(operand1, operand2);
-	  timA32 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  add64(operand3, operand4);
-	  timA64 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  mult32(operand1, operand2);
-	  timM32 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  mult64(operand1, operand2);
-	  timM64 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  div32(operand1, operand2);
-	  timD32 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  div64(operand1, operand2);
-	  timD64 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  dst8 = src8;
-	  timStrc8 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  dst128 = src128;
-	  timStrc128 += (double)timer_stop(timStart);
-
-	  timStart = timer_start();
-	  dst1024 = src1024;
-	  timStrc1024 += (double)timer_stop(timStart);
-
-	  num++;
-  }
-
-  timA32 = timA32 / 8000 / 100;					//divide by 8000 to get milliseconds, and divide by 100 to get average trial
-  timA64 = timA64 / 8000 / 100;
-  timM32 = timM32 / 8000 / 100;
-  timM64 = timM64 / 8000 / 100;
-  timD32 = timD32 / 8000 / 100;
-  timD64 = timD64 / 8000 / 100;
-  timStrc8 = timStrc8 / 8000 / 100;
-  timStrc128 = timStrc128 / 8000 / 100;
-  timStrc1024 = timStrc1024 / 8000 / 100;
+  //Start the process of receiving data
+  HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
+  printString("\nEnter a command for the LED:\r\n");
+  printString(SAVE_CURS);
 
   /* USER CODE END 2 */
 
@@ -213,6 +147,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+		//increment counter and display it approx. every 1 second
+		HAL_Delay(1000);
+		counter++;
+		sprintf(counter_str, "%d", counter);
+		printString(HIDE_CURS);
+		printString(GO_TO_COUNT);
+		printString(counter_str);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -221,7 +164,7 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration)
+  * @brief System Clock Configuration
   * @retval None
   */
 void SystemClock_Config(void)
@@ -307,19 +250,107 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *husart)
+{
+	counter++;
+	printString(RETURN_CURS);
+	printString(SHOW_CURS);
+	//HAL_UART_Transmit(&huart3, cliBufferRX, 1, 1000);
+	copyCharTo(cliBufferRX, save, j);
+
+	//backspace incidence
+	if(cliBufferRX[0] == '\b')
+	{
+		j--;
+	}
+	else
+	{
+		j++;
+	}
+
+	//when enter is hit execute the command
+	if(isCompleteLine(cliBufferRX))
+	{
+		HAL_UART_Transmit(&huart3, "\r\n", 2, 1000);
+		//strcpy((char *)cliBufferTX, save);
+		//HAL_UART_Transmit(&huart3, cliBufferTX, strlen((char *)cliBufferTX), 1000);
+
+		executeCommand(save);
+		HAL_UART_Transmit(&huart3, "\r\n", 2, 1000);
+		j = 0;
+		for(int i = 0; i < 20; i++)
+		{
+			save[i] = NULL;
+		}
+		printString("\nEnter a command for the LED:\r\n");
+	}
+
+	printString(SAVE_CURS);
+
+	while(huart3.gState == HAL_UART_STATE_BUSY_RX){}
+
+	HAL_UART_Receive_IT(&huart3, cliBufferRX, 1);
+
+}
 
 /* USER CODE END 4 */
 

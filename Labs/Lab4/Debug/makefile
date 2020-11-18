@@ -47,7 +47,7 @@ all: Lab4.elf secondary-outputs
 
 # Tool invocations
 Lab4.elf: $(OBJS) $(USER_OBJS) /Users/danieltakyi/Documents/ENEL487/ENEL487DanielT/Labs/Lab4/STM32F103RBTX_FLASH.ld
-	arm-none-eabi-gcc -o "Lab4.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"/Users/danieltakyi/Documents/ENEL487/ENEL487DanielT/Labs/Lab4/STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab4.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "Lab4.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"/Users/danieltakyi/Documents/ENEL487/ENEL487DanielT/Labs/Lab4/STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab4.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
