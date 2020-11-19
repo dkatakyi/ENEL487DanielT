@@ -265,8 +265,10 @@ void StartBlink01(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    osDelay(500);
   }
+  osThreadTerminate(NULL);
   /* USER CODE END 5 */
 }
 
@@ -283,8 +285,10 @@ void StartBlink02(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    osDelay(200);
   }
+  osThreadTerminate(NULL);
   /* USER CODE END StartBlink02 */
 }
 
