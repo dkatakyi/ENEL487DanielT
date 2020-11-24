@@ -23,6 +23,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "CLI.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -47,17 +52,41 @@ UART_HandleTypeDef huart3;
 osThreadId_t blink01Handle;
 const osThreadAttr_t blink01_attributes = {
   .name = "blink01",
+  .priority = (osPriority_t) osPriorityAboveNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for RX_CLI */
+osThreadId_t RX_CLIHandle;
+const osThreadAttr_t RX_CLI_attributes = {
+  .name = "RX_CLI",
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 128 * 4
 };
-/* Definitions for blink02 */
-osThreadId_t blink02Handle;
-const osThreadAttr_t blink02_attributes = {
-  .name = "blink02",
+/* Definitions for Status_CLI */
+osThreadId_t Status_CLIHandle;
+const osThreadAttr_t Status_CLI_attributes = {
+  .name = "Status_CLI",
   .priority = (osPriority_t) osPriorityBelowNormal,
   .stack_size = 128 * 4
 };
 /* USER CODE BEGIN PV */
+uint8_t cliBufferTX[56];
+uint8_t cliBufferRX[10];
+uint8_t save[40];
+int j = 0;
+int k = 0;
+int period = 400;
+uint8_t period_str[20];
+
+const char *CLEAR_SCREEN = "\x1b[2J";
+const char *SCROLL_WINDOW = "\x1b[10;r";
+const char *GO_TO_SCROLL = "\x1b[10;0H";
+const char *GO_TO_TOP = "\x1b[0;0H";
+const char *GO_TO_COUNT = "\x1b[0;9H";
+const char *HIDE_CURS = "\x1b[?25l";
+const char *SHOW_CURS = "\x1b[?25h";
+const char *SAVE_CURS = "\x1b[s";
+const char *RETURN_CURS = "\x1b[u";
 
 /* USER CODE END PV */
 
@@ -66,7 +95,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 void StartBlink01(void *argument);
-void StartBlink02(void *argument);
+void StartRX_CLI(void *argument);
+void StartStatus_CLI(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -107,6 +137,21 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("Welcome to the CLI!\r\n");
+  HAL_Delay(2000);
+
+  //Formats the screen to show counter and create a scroll window
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("period: ");
+  printString("400");
+  printString(SCROLL_WINDOW);
+  printString(GO_TO_SCROLL);
+
+  printString("\n~>$ ");
+  printString(SAVE_CURS);
 
   /* USER CODE END 2 */
 
@@ -133,8 +178,11 @@ int main(void)
   /* creation of blink01 */
   blink01Handle = osThreadNew(StartBlink01, NULL, &blink01_attributes);
 
-  /* creation of blink02 */
-  blink02Handle = osThreadNew(StartBlink02, NULL, &blink02_attributes);
+  /* creation of RX_CLI */
+  RX_CLIHandle = osThreadNew(StartRX_CLI, NULL, &RX_CLI_attributes);
+
+  /* creation of Status_CLI */
+  Status_CLIHandle = osThreadNew(StartStatus_CLI, NULL, &Status_CLI_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -265,31 +313,107 @@ void StartBlink01(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-    osDelay(500);
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
+      osDelay(period);
   }
   osThreadTerminate(NULL);
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_StartBlink02 */
+/* USER CODE BEGIN Header_StartRX_CLI */
 /**
-* @brief Function implementing the blink02 thread.
+* @brief Function implementing the RX_CLI thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartBlink02 */
-void StartBlink02(void *argument)
+/* USER CODE END Header_StartRX_CLI */
+void StartRX_CLI(void *argument)
 {
-  /* USER CODE BEGIN StartBlink02 */
+  /* USER CODE BEGIN StartRX_CLI */
+
   /* Infinite loop */
   for(;;)
   {
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-    osDelay(200);
+	  if(HAL_UART_Receive(&huart3, cliBufferRX, 1, 300) == HAL_OK)
+	  {
+		  printString(RETURN_CURS);
+		  printString(SHOW_CURS);
+
+		  copyCharTo((char *)cliBufferRX, (char *)save, j);
+		  printString(SAVE_CURS);
+		  //backspace incidence
+		  if(cliBufferRX[0] == '\b')
+		  {
+			  j--;
+		  }
+		  else
+		  {
+			  j++;
+		  }
+
+		  //when enter is hit execute the command
+		  if(isCompleteLine((char *)cliBufferRX))
+		  {
+			  char *cmd;
+			  char *token;
+
+			  printString("\r\n");
+			  while(j < 20 && save[j] != '\0')
+			  {
+				  save[j] = '\0';
+				  j++;
+			  }
+
+			  token = strtok((char *)save, " ");
+			  cmd = token;
+			  token = strtok(NULL, " ");
+			  if(strcmp(cmd, "period") == 0 && atoi(token) > 0)
+			  {
+				  period = atoi(token);
+			  }
+
+			  printString("\r\n");
+			  j = 0;
+			  for(int i = 0; i < 20; i++)
+			  {
+				  save[i] = '\0';
+			  }
+			  printString("\n~>$ ");
+
+			  printString(SAVE_CURS);
+			  osDelay(10);
+		  }
+	  }
   }
   osThreadTerminate(NULL);
-  /* USER CODE END StartBlink02 */
+  /* USER CODE END StartRX_CLI */
+}
+
+/* USER CODE BEGIN Header_StartStatus_CLI */
+/**
+* @brief Function implementing the Status_CLI thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartStatus_CLI */
+void StartStatus_CLI(void *argument)
+{
+  /* USER CODE BEGIN StartStatus_CLI */
+  /* Infinite loop */
+  for(;;)
+  {
+
+	  sprintf((char *)period_str, "%d", period);
+	  printString(HIDE_CURS);
+	  printString(GO_TO_COUNT);
+	  printString("                           ");
+	  printString(GO_TO_COUNT);
+	  printString((const char *)period_str);
+	  osDelay(10);
+  }
+  osThreadTerminate(NULL);
+  /* USER CODE END StartStatus_CLI */
 }
 
 /**
