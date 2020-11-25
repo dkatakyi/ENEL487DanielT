@@ -24,10 +24,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "CLI.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <stdbool.h>
+//#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -74,9 +74,9 @@ uint8_t cliBufferTX[56];
 uint8_t cliBufferRX[10];
 uint8_t save[40];
 int j = 0;
-int k = 0;
 int period = 400;
-uint8_t period_str[20];
+uint8_t period_str[10];
+bool update = false;
 
 const char *CLEAR_SCREEN = "\x1b[2J";
 const char *SCROLL_WINDOW = "\x1b[10;r";
@@ -147,6 +147,8 @@ int main(void)
   printString(GO_TO_TOP);
   printString("period: ");
   printString("400");
+  printString("\x1b[9;0H");
+  printString("Enter \"period x\" to change the period of the LED flash, where x > 0");
   printString(SCROLL_WINDOW);
   printString(GO_TO_SCROLL);
 
@@ -371,9 +373,14 @@ void StartRX_CLI(void *argument)
 			  if(strcmp(cmd, "period") == 0 && atoi(token) > 0)
 			  {
 				  period = atoi(token);
+				  update = true;
 			  }
-
+			  else if(save[0] != '\r')
+			  {
+				  printString("Invalid input. Try again.");
+			  }
 			  printString("\r\n");
+
 			  j = 0;
 			  for(int i = 0; i < 20; i++)
 			  {
@@ -382,6 +389,7 @@ void StartRX_CLI(void *argument)
 			  printString("\n~>$ ");
 
 			  printString(SAVE_CURS);
+
 			  osDelay(10);
 		  }
 	  }
@@ -404,12 +412,16 @@ void StartStatus_CLI(void *argument)
   for(;;)
   {
 
-	  sprintf((char *)period_str, "%d", period);
-	  printString(HIDE_CURS);
-	  printString(GO_TO_COUNT);
-	  printString("                           ");
-	  printString(GO_TO_COUNT);
-	  printString((const char *)period_str);
+	  if(update == true)
+	  {
+		  sprintf((char *)period_str, "%d", period);
+		  printString(HIDE_CURS);
+		  printString(GO_TO_COUNT);
+		  printString("                           ");
+		  printString(GO_TO_COUNT);
+		  printString((const char *)period_str);
+		  update = false;
+	  }
 	  osDelay(10);
   }
   osThreadTerminate(NULL);
