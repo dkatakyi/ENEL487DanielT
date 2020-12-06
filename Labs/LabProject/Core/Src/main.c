@@ -23,6 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "CLI.h"
+#include "TrafficLight.h"
 
 /* USER CODE END Includes */
 
@@ -75,6 +77,24 @@ const osMessageQueueAttr_t Message_Queue_attributes = {
   .name = "Message_Queue"
 };
 /* USER CODE BEGIN PV */
+char state = 'a';
+
+uint8_t cliBufferTX[56];
+uint8_t cliBufferRX[10];
+uint8_t save[40];
+int j = 0;
+uint8_t period_str[10];
+bool update = false;
+
+const char *CLEAR_SCREEN = "\x1b[2J";
+const char *SCROLL_WINDOW = "\x1b[10;r";
+const char *GO_TO_SCROLL = "\x1b[10;0H";
+const char *GO_TO_TOP = "\x1b[0;0H";
+const char *GO_TO_COUNT = "\x1b[0;9H";
+const char *HIDE_CURS = "\x1b[?25l";
+const char *SHOW_CURS = "\x1b[?25h";
+const char *SAVE_CURS = "\x1b[s";
+const char *RETURN_CURS = "\x1b[u";
 
 /* USER CODE END PV */
 
@@ -125,7 +145,23 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("Welcome to the CLI!\r\n");
+  HAL_Delay(2000);
 
+  //Formats the screen to show counter and create a scroll window
+  printString(CLEAR_SCREEN);
+  printString(GO_TO_TOP);
+  printString("period: ");
+  printString("400");
+  printString("\x1b[9;0H");
+  printString("Enter \"period x\" to change the period of the LED flash, where x > 0");
+  printString(SCROLL_WINDOW);
+  printString(GO_TO_SCROLL);
+
+  printString("\n~>$ ");
+  printString(SAVE_CURS);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -301,11 +337,41 @@ static void MX_GPIO_Init(void)
 void StartLightController(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	uint16_t cmd = 0;
+	uint16_t msg = cmd;
+	int period = 400;
+	/* Infinite loop */
+	for(;;)
+	{
+
+		if(osMessageQueueGet(Command_QueueHandle, &cmd, NULL, 0U) == osOK)
+		{
+			if(cmd != msg)
+			{
+				msg = cmd;
+				if(msg == 1)
+				{
+					state = 'x';
+				}
+				else if(msg == 0)
+				{
+					state = 'a';
+				}
+			}
+		}
+
+		if(osMessageQueuePut(Message_QueueHandle, &msg, 1U, 0U)!= osOK)
+		{
+			Error_Handler();
+		}
+		period = periodState(state, period);
+		state = lightState(state);
+
+
+
+		osDelay(period);
+	}
+	osThreadTerminate(NULL);
   /* USER CODE END 5 */
 }
 
@@ -319,11 +385,100 @@ void StartLightController(void *argument)
 void StartRX_CLI(void *argument)
 {
   /* USER CODE BEGIN StartRX_CLI */
+	uint16_t cmd = 0;
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	for(;;)
+	{
+		if(HAL_UART_Receive(&huart3, cliBufferRX, 1, 300) == HAL_OK)
+		{
+			printString(RETURN_CURS);
+			printString(SHOW_CURS);
+
+			copyCharTo((char *)cliBufferRX, (char *)save, j);
+			printString(SAVE_CURS);
+			//backspace incidence
+			if(cliBufferRX[0] == '\b')
+			{
+				j--;
+			}
+			else
+			{
+				j++;
+			}
+
+			//when enter is hit execute the command
+			if(isCompleteLine((char *)cliBufferRX))
+			{
+				//				char *cmd;
+				//				char *token;
+
+				printString("\r\n");
+				while(j < 20 && save[j] != '\0')
+				{
+					save[j] = '\0';
+					j++;
+				}
+
+				if(strcmp((char *)save, "staticcycle\r") == 0)
+				{
+					cmd = 0;
+					printString("Command read.\r");
+//					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+//					{
+//						Error_Handler();
+//					}
+				}
+				else if(strcmp((char *)save, "failsafe\r") == 0)
+				{
+					cmd = 1;
+					printString("Command read.");
+//					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+//					{
+//						Error_Handler();
+//					}
+				}
+				else if(strcmp((char *)save, "help\r") == 0)
+				{
+					printString("Help list************");
+				}
+				else
+				{
+					printString("Error message************");
+				}
+
+				if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+				{
+					Error_Handler();
+				}
+
+
+				//				token = strtok((char *)save, " ");
+				//				cmd = token;
+				//				token = strtok(NULL, " ");
+				//				if(strcmp(cmd, "period") == 0 && atoi(token) > 0)
+				//				{
+				//					period = atoi(token);
+				//					update = true;
+				//				}
+				//				else if(save[0] != '\r')
+				//				{
+				//					printString("Invalid input. Try again.");
+				//				}
+				//				printString("\r\n");
+
+				j = 0;
+				for(int i = 0; i < 20; i++)
+				{
+					save[i] = '\0';
+				}
+				printString("\r\n~>$ ");
+
+				printString(SAVE_CURS);
+				osDelay(10);
+			}
+		}
+	}
+	osThreadTerminate(NULL);
   /* USER CODE END StartRX_CLI */
 }
 
@@ -337,11 +492,24 @@ void StartRX_CLI(void *argument)
 void StartStatus_CLI(void *argument)
 {
   /* USER CODE BEGIN StartStatus_CLI */
+	uint16_t msg;
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	for(;;)
+	{
+		if(osMessageQueueGet(Message_QueueHandle, &msg, NULL, 0U ))
+		{
+			sprintf((char *)period_str, "%d", msg);
+			printString(HIDE_CURS);
+			printString(GO_TO_COUNT);
+			printString("                           ");
+			printString(GO_TO_COUNT);
+			printString((const char *)period_str);
+
+		}
+
+		osDelay(5);
+	}
+	osThreadTerminate(NULL);
   /* USER CODE END StartStatus_CLI */
 }
 
