@@ -113,7 +113,7 @@ char lightState(char st)
 		HAL_GPIO_WritePin(GPIOA, Y1_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOA, G1_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOA, B1_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, R2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, R2_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB, Y2_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOB, G2_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOB, B2_Pin, GPIO_PIN_SET);
@@ -132,53 +132,56 @@ char lightState(char st)
 	return st;
 }
 
-int periodState(char st, int pd)
+int periodState(char st, int x)
 {
+	int pd;
 
 	switch(st){
 
 	case 'a':
-		pd = 600;
+		pd = 6000;
 		break;
 
 	case 'b':
-		pd = 7050;
+		pd = 70500;
 		break;
 
 	case 'c':
-		pd = 1350;
+		pd = 13500;
 		break;
 
 	case 'd':
-		pd = 350;
+		pd = 3500;
 		break;
 
 	case 'e':
-		pd = 600;
+		pd = 6000;
 		break;
 
 	case 'f':
-		pd = 2000;
+		pd = 20000;
 		break;
 
 	case 'g':
-		pd = 800;
+		pd = 8000;
 		break;
 
 	case 'h':
-		pd = 350;
+		pd = 3500;
 		break;
 
 	case 'x':
-		pd = 600;
+		pd = 1500;
 		break;
 
 	case 'y':
-		pd = 600;
+		pd = 500;
 
 	default:
 
 		break;
 	}
+
+	return pd / x;
 }
 

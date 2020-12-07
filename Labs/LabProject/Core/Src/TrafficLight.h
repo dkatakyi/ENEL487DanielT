@@ -12,6 +12,6 @@
 
 char lightState(char st);
 
-int periodState(char st, int pd);
+int periodState(char st, int x);
 
 #endif /* SRC_TRAFFICLIGHT_H_ */

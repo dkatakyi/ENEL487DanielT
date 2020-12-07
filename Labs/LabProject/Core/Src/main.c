@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "CLI.h"
 #include "TrafficLight.h"
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -45,10 +46,10 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart3;
 
-/* Definitions for LightController */
-osThreadId_t LightControllerHandle;
-const osThreadAttr_t LightController_attributes = {
-  .name = "LightController",
+/* Definitions for StateController */
+osThreadId_t StateControllerHandle;
+const osThreadAttr_t StateController_attributes = {
+  .name = "StateController",
   .priority = (osPriority_t) osPriorityAboveNormal,
   .stack_size = 128 * 4
 };
@@ -59,10 +60,10 @@ const osThreadAttr_t RX_CLI_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 128 * 4
 };
-/* Definitions for Status_CLI */
-osThreadId_t Status_CLIHandle;
-const osThreadAttr_t Status_CLI_attributes = {
-  .name = "Status_CLI",
+/* Definitions for StatusUpdate */
+osThreadId_t StatusUpdateHandle;
+const osThreadAttr_t StatusUpdate_attributes = {
+  .name = "StatusUpdate",
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 128 * 4
 };
@@ -77,7 +78,7 @@ const osMessageQueueAttr_t Message_Queue_attributes = {
   .name = "Message_Queue"
 };
 /* USER CODE BEGIN PV */
-char state = 'a';
+char state = 'x';
 
 uint8_t cliBufferTX[56];
 uint8_t cliBufferRX[10];
@@ -102,9 +103,9 @@ const char *RETURN_CURS = "\x1b[u";
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
-void StartLightController(void *argument);
+void StartStateController(void *argument);
 void StartRX_CLI(void *argument);
-void StartStatus_CLI(void *argument);
+void StartStatusUpdate(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -191,14 +192,14 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of LightController */
-  LightControllerHandle = osThreadNew(StartLightController, NULL, &LightController_attributes);
+  /* creation of StateController */
+  StateControllerHandle = osThreadNew(StartStateController, NULL, &StateController_attributes);
 
   /* creation of RX_CLI */
   RX_CLIHandle = osThreadNew(StartRX_CLI, NULL, &RX_CLI_attributes);
 
-  /* creation of Status_CLI */
-  Status_CLIHandle = osThreadNew(StartStatus_CLI, NULL, &Status_CLI_attributes);
+  /* creation of StatusUpdate */
+  StatusUpdateHandle = osThreadNew(StartStatusUpdate, NULL, &StatusUpdate_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -327,36 +328,41 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartLightController */
+/* USER CODE BEGIN Header_StartStateController */
 /**
-  * @brief  Function implementing the LightController thread.
+  * @brief  Function implementing the StateController thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartLightController */
-void StartLightController(void *argument)
+/* USER CODE END Header_StartStateController */
+void StartStateController(void *argument)
 {
   /* USER CODE BEGIN 5 */
-	uint16_t cmd = 0;
+	uint16_t cmd = 101;
 	uint16_t msg = cmd;
 	int period = 400;
+	int speedFactor = 1;
 	/* Infinite loop */
 	for(;;)
 	{
 
 		if(osMessageQueueGet(Command_QueueHandle, &cmd, NULL, 0U) == osOK)
 		{
-			if(cmd != msg)
+			if(cmd != msg && cmd > 100)
 			{
-				msg = cmd;
-				if(msg == 1)
+				if(cmd == 101)
 				{
 					state = 'x';
 				}
-				else if(msg == 0)
+				else if(cmd == 102)
 				{
 					state = 'a';
 				}
+				msg = cmd;
+			}
+			else if(cmd != msg && cmd > 0)
+			{
+				speedFactor = cmd;
 			}
 		}
 
@@ -364,7 +370,7 @@ void StartLightController(void *argument)
 		{
 			Error_Handler();
 		}
-		period = periodState(state, period);
+		period = periodState(state, speedFactor);
 		state = lightState(state);
 
 
@@ -386,6 +392,8 @@ void StartRX_CLI(void *argument)
 {
   /* USER CODE BEGIN StartRX_CLI */
 	uint16_t cmd = 0;
+	char* cmdStr;
+	char* arg;
   /* Infinite loop */
 	for(;;)
 	{
@@ -409,9 +417,6 @@ void StartRX_CLI(void *argument)
 			//when enter is hit execute the command
 			if(isCompleteLine((char *)cliBufferRX))
 			{
-				//				char *cmd;
-				//				char *token;
-
 				printString("\r\n");
 				while(j < 20 && save[j] != '\0')
 				{
@@ -419,52 +424,88 @@ void StartRX_CLI(void *argument)
 					j++;
 				}
 
-				if(strcmp((char *)save, "staticcycle\r") == 0)
+
+				arg = strtok((char *)save, " ");
+				cmdStr = arg;
+				arg = strtok(NULL, " ");
+
+				if(arg == NULL && strcmp((char *)cmdStr, "help\r") == 0)
 				{
-					cmd = 0;
-					printString("Command read.\r");
-//					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
-//					{
-//						Error_Handler();
-//					}
-				}
-				else if(strcmp((char *)save, "failsafe\r") == 0)
-				{
-					cmd = 1;
-					printString("Command read.");
-//					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
-//					{
-//						Error_Handler();
-//					}
-				}
-				else if(strcmp((char *)save, "help\r") == 0)
-				{
+					cmd = 102;
 					printString("Help list************");
+				}
+				else if(strtok(NULL, " ") == NULL)
+				{
+					if(atoi(arg) >= 1 && atoi(arg) <= 100 && strcmp((char *)cmdStr, "atm") == 0)
+					{
+						cmd = (uint16_t)atoi(arg);
+						printString("Command read.\r");
+						if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+						{
+							Error_Handler();
+						}
+					}
+					else if(strcmp((char *)cmdStr, "mode") == 0 && strcmp((char *)arg, "fsm\r") == 0)
+					{
+						cmd = 101;
+						printString("Command read.");
+						if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+						{
+							Error_Handler();
+						}
+					}
+					else if(strcmp((char *)cmdStr, "mode") == 0 && strcmp((char *)arg, "scm\r") == 0)
+					{
+						cmd = 102;
+						printString("Command read.");
+						if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+						{
+							Error_Handler();
+						}
+					}
+					else
+					{
+						cmd = 103;
+						printString("Error message************");
+					}
 				}
 				else
 				{
+					cmd = 103;
 					printString("Error message************");
 				}
 
-				if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
-				{
-					Error_Handler();
-				}
+//				if(strcmp((char *)save, "staticcycle\r") == 0)
+//				{
+//					cmd = 0;
+//					printString("Command read.\r");
+////					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+////					{
+////						Error_Handler();
+////					}
+//				}
+//				else if(strcmp((char *)save, "failsafe\r") == 0)
+//				{
+//					cmd = 1;
+//					printString("Command read.");
+////					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+////					{
+////						Error_Handler();
+////					}
+//				}
+//				else if(strcmp((char *)save, "help\r") == 0)
+//				{
+//					printString("Help list************");
+//				}
+//				else
+//				{
+//					printString("Error message************");
+//				}
 
-
-				//				token = strtok((char *)save, " ");
-				//				cmd = token;
-				//				token = strtok(NULL, " ");
-				//				if(strcmp(cmd, "period") == 0 && atoi(token) > 0)
-				//				{
-				//					period = atoi(token);
-				//					update = true;
-				//				}
-				//				else if(save[0] != '\r')
-				//				{
-				//					printString("Invalid input. Try again.");
-				//				}
-				//				printString("\r\n");
+//				if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+//				{
+//					Error_Handler();
+//				}
 
 				j = 0;
 				for(int i = 0; i < 20; i++)
@@ -482,21 +523,21 @@ void StartRX_CLI(void *argument)
   /* USER CODE END StartRX_CLI */
 }
 
-/* USER CODE BEGIN Header_StartStatus_CLI */
+/* USER CODE BEGIN Header_StartStatusUpdate */
 /**
-* @brief Function implementing the Status_CLI thread.
+* @brief Function implementing the StatusUpdate thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartStatus_CLI */
-void StartStatus_CLI(void *argument)
+/* USER CODE END Header_StartStatusUpdate */
+void StartStatusUpdate(void *argument)
 {
-  /* USER CODE BEGIN StartStatus_CLI */
+  /* USER CODE BEGIN StartStatusUpdate */
 	uint16_t msg;
   /* Infinite loop */
 	for(;;)
 	{
-		if(osMessageQueueGet(Message_QueueHandle, &msg, NULL, 0U ))
+		if(osMessageQueueGet(Message_QueueHandle, &msg, NULL, 0U) == osOK)
 		{
 			sprintf((char *)period_str, "%d", msg);
 			printString(HIDE_CURS);
@@ -510,7 +551,7 @@ void StartStatus_CLI(void *argument)
 		osDelay(5);
 	}
 	osThreadTerminate(NULL);
-  /* USER CODE END StartStatus_CLI */
+  /* USER CODE END StartStatusUpdate */
 }
 
 /**
