@@ -64,7 +64,7 @@ const osThreadAttr_t RX_CLI_attributes = {
 osThreadId_t StatusUpdateHandle;
 const osThreadAttr_t StatusUpdate_attributes = {
   .name = "StatusUpdate",
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 128 * 4
 };
 /* Definitions for Command_Queue */
@@ -80,7 +80,7 @@ const osMessageQueueAttr_t Message_Queue_attributes = {
 /* USER CODE BEGIN PV */
 char state = 'x';
 
-uint8_t cliBufferTX[56];
+uint8_t cliBufferTX[100];
 uint8_t cliBufferRX[10];
 uint8_t save[40];
 int j = 0;
@@ -91,7 +91,7 @@ const char *CLEAR_SCREEN = "\x1b[2J";
 const char *SCROLL_WINDOW = "\x1b[10;r";
 const char *GO_TO_SCROLL = "\x1b[10;0H";
 const char *GO_TO_TOP = "\x1b[0;0H";
-const char *GO_TO_COUNT = "\x1b[0;9H";
+const char *GO_TO_COUNT = "\x1b[0;7H";
 const char *HIDE_CURS = "\x1b[?25l";
 const char *SHOW_CURS = "\x1b[?25h";
 const char *SAVE_CURS = "\x1b[s";
@@ -154,10 +154,10 @@ int main(void)
   //Formats the screen to show counter and create a scroll window
   printString(CLEAR_SCREEN);
   printString(GO_TO_TOP);
-  printString("period: ");
-  printString("400");
+  printString("Mode: ");
+  printString("Failsafe");
   printString("\x1b[9;0H");
-  printString("Enter \"period x\" to change the period of the LED flash, where x > 0");
+  printString("Enter \"help\" for a list of commands");
   printString(SCROLL_WINDOW);
   printString(GO_TO_SCROLL);
 
@@ -394,6 +394,7 @@ void StartRX_CLI(void *argument)
 	uint16_t cmd = 0;
 	char* cmdStr;
 	char* arg;
+	uint8_t temp[40];
   /* Infinite loop */
 	for(;;)
 	{
@@ -418,46 +419,59 @@ void StartRX_CLI(void *argument)
 			if(isCompleteLine((char *)cliBufferRX))
 			{
 				printString("\r\n");
+				save[j-1] = '\0';
 				while(j < 20 && save[j] != '\0')
 				{
 					save[j] = '\0';
 					j++;
 				}
 
-
+				strcpy((char *)temp, (const char *)save);
 				arg = strtok((char *)save, " ");
 				cmdStr = arg;
 				arg = strtok(NULL, " ");
 
-				if(arg == NULL && strcmp((char *)cmdStr, "help\r") == 0)
+				if(arg == NULL && strcmp((char *)cmdStr, "help") == 0)
 				{
 					cmd = 102;
-					printString("Help list************");
+//					printString("\n1. \"mode fsm\" switches controller\r");
+//					printString("\nto Failsafe mode\r\n");
+//					printString("\n2. \"mode scm\" switches controller\r");
+//					printString("\nto Static Cycle mode\r\n");
+//					printString("\n3. \"atm x\" enters accelerated test\r");
+//					printString("\nmode with multiplication factor x\r\n");
+					printString("1. \"mode fsm\" switches controller to Failsafe mode\r\n");
+					printString("\n2. \"mode scm\" switches controller to Static Cycle mode\r\n");
+					printString("\n3. \"atm x\" enters accelerated test mode with multiplication factor x, when 0 < x < 101\r\n");
+				}
+				else if(cmdStr == NULL)
+				{
+					cmd = 103;
 				}
 				else if(strtok(NULL, " ") == NULL)
 				{
 					if(atoi(arg) >= 1 && atoi(arg) <= 100 && strcmp((char *)cmdStr, "atm") == 0)
 					{
 						cmd = (uint16_t)atoi(arg);
-						printString("Command read.\r");
+						printString("Entering accelerated test mode.\r\n");
 						if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
 						{
 							Error_Handler();
 						}
 					}
-					else if(strcmp((char *)cmdStr, "mode") == 0 && strcmp((char *)arg, "fsm\r") == 0)
+					else if(strcmp((char *)cmdStr, "mode") == 0 && strcmp((char *)arg, "fsm") == 0)
 					{
 						cmd = 101;
-						printString("Command read.");
+						printString("Switching to Failsafe mode.\r\n");
 						if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
 						{
 							Error_Handler();
 						}
 					}
-					else if(strcmp((char *)cmdStr, "mode") == 0 && strcmp((char *)arg, "scm\r") == 0)
+					else if(strcmp((char *)cmdStr, "mode") == 0 && strcmp((char *)arg, "scm") == 0)
 					{
 						cmd = 102;
-						printString("Command read.");
+						printString("Switching to Static Cycle mode.\r\n");
 						if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
 						{
 							Error_Handler();
@@ -466,13 +480,17 @@ void StartRX_CLI(void *argument)
 					else
 					{
 						cmd = 103;
-						printString("Error message************");
+						printString("Invalid command: ");
+						printString((char *)temp);
+						printString("\r\n");
 					}
 				}
 				else
 				{
 					cmd = 103;
-					printString("Error message************");
+					printString("Invalid command: ");
+					printString((char *)temp);
+					printString("\r\n");
 				}
 
 //				if(strcmp((char *)save, "staticcycle\r") == 0)
@@ -533,22 +551,33 @@ void StartRX_CLI(void *argument)
 void StartStatusUpdate(void *argument)
 {
   /* USER CODE BEGIN StartStatusUpdate */
-	uint16_t msg;
+	uint16_t msg = 101;
+	uint16_t mode = msg;
   /* Infinite loop */
 	for(;;)
 	{
 		if(osMessageQueueGet(Message_QueueHandle, &msg, NULL, 0U) == osOK)
 		{
-			sprintf((char *)period_str, "%d", msg);
-			printString(HIDE_CURS);
-			printString(GO_TO_COUNT);
-			printString("                           ");
-			printString(GO_TO_COUNT);
-			printString((const char *)period_str);
+			if(msg != mode)
+			{
+				printString(HIDE_CURS);
+				printString(GO_TO_COUNT);
+				printString("                           ");
+				printString(GO_TO_COUNT);
+				if(msg == 102)
+				{
+					printString("Static cycle mode");
+				}
+				else
+				{
+					printString("Failsafe mode");
+				}
+				mode = msg;
+			}
 
 		}
 
-		osDelay(5);
+		osDelay(10);
 	}
 	osThreadTerminate(NULL);
   /* USER CODE END StartStatusUpdate */

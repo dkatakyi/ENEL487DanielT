@@ -2,7 +2,7 @@
 FREERTOS.FootprintOK=true
 FREERTOS.IPParameters=Tasks01,FootprintOK,Queues01
 FREERTOS.Queues01=Command_Queue,1,uint16_t,0,Dynamic,NULL,NULL;Message_Queue,1,uint16_t,0,Dynamic,NULL,NULL
-FREERTOS.Tasks01=StateController,32,128,StartStateController,Default,NULL,Dynamic,NULL,NULL;RX_CLI,24,128,StartRX_CLI,Default,NULL,Dynamic,NULL,NULL;StatusUpdate,8,128,StartStatusUpdate,Default,NULL,Dynamic,NULL,NULL
+FREERTOS.Tasks01=StateController,32,128,StartStateController,Default,NULL,Dynamic,NULL,NULL;RX_CLI,24,128,StartRX_CLI,Default,NULL,Dynamic,NULL,NULL;StatusUpdate,24,128,StartStatusUpdate,Default,NULL,Dynamic,NULL,NULL
 File.Version=6
 GPIO.groupedBy=Group By Peripherals
 KeepUserPlacement=false

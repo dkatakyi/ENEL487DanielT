@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern uint8_t cliBufferTX[56];
+extern uint8_t cliBufferTX[100];
 extern UART_HandleTypeDef huart3;
 
 bool isCompleteLine(char recBuffer[10]);
