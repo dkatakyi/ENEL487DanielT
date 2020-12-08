@@ -32,7 +32,7 @@ bool isCompleteLine(char recBuffer[10]);
  Return type: n/a
  Purpose: Copy the received character to the saved string and print character on the terminal
  */
-void copyCharTo(char recBuffer[10], char s[40], int coun);
+void copyCharTo(char recBuffer[10], char s[100], int coun);
 
 //void executeCommand(char recBuffer[]);
 

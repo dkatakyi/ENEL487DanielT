@@ -80,7 +80,7 @@ const osMessageQueueAttr_t Message_Queue_attributes = {
 /* USER CODE BEGIN PV */
 
 uint8_t cliBufferRX[10];
-uint8_t save[40];
+uint8_t save[100];
 
 
 const char *CLEAR_SCREEN = "\x1b[2J";
@@ -144,7 +144,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printString(CLEAR_SCREEN);
   printString(GO_TO_TOP);
-  printString("Welcome to the CLI!\r\n");
+  printString("Welcome to the ItC!\r\n");
+  printString("Created by Daniel Takyi.\r\n");
   HAL_Delay(2000);
 
   //Formats the screen to show counter and create a scroll window
@@ -392,7 +393,7 @@ void StartRX_CLI(void *argument)
 	uint16_t cmd = 0;
 	char* cmdStr;
 	char* arg;
-	uint8_t temp[40];
+	uint8_t temp[100];
   /* Infinite loop */
 	for(;;)
 	{
@@ -418,7 +419,7 @@ void StartRX_CLI(void *argument)
 			{
 				printString("\r\n");
 				save[j-1] = '\0';
-				while(j < 20 && save[j] != '\0')
+				while(j < 100 && save[j] != '\0')
 				{
 					save[j] = '\0';
 					j++;

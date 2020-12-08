@@ -20,7 +20,7 @@ bool isCompleteLine(char recBuffer[10])
 	}
 }
 
-void copyCharTo(char recBuffer[10], char s[40], int coun)
+void copyCharTo(char recBuffer[10], char s[100], int coun)
 {
 
 		  if(recBuffer[0] == '\b')
