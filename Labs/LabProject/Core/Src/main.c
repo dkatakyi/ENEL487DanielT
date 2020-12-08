@@ -432,10 +432,25 @@ void StartRX_CLI(void *argument)
 
 				if(arg == NULL && strcmp((char *)cmdStr, "help") == 0)
 				{
-					cmd = 102;
+					cmd = 103;
 					printString("1. \"mode fsm\" switches controller to Failsafe mode\r\n");
 					printString("\n2. \"mode scm\" switches controller to Static Cycle mode\r\n");
 					printString("\n3. \"atm x\" enters accelerated test mode with multiplication factor x, when 0 < x < 101\r\n");
+				}
+				else if(arg == NULL && strcmp((char *)cmdStr, "clear") == 0)
+				{
+					cmd = 104;
+					printString(CLEAR_SCREEN);
+					printString(GO_TO_TOP);
+					printString("Mode: ");
+					printString("\x1b[9;0H");
+					printString("Enter \"help\" for a list of commands");
+					printString(SCROLL_WINDOW);
+					printString(GO_TO_SCROLL);
+					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
+					{
+						Error_Handler();
+					}
 				}
 				else if(cmdStr == NULL)
 				{
@@ -521,6 +536,10 @@ void StartStatusUpdate(void *argument)
 		{
 			if(msg != mode)
 			{
+				if(msg == 104)
+				{
+					msg = mode;
+				}
 				printString(HIDE_CURS);
 				printString(GO_TO_COUNT);
 				printString("                           ");
