@@ -82,6 +82,7 @@ void printString(const char* mess)
 {
 	int i = 0;
 	HAL_StatusTypeDef  st;
+	uint8_t cliBufferTX[100];
 
 	while(huart3.gState == HAL_UART_STATE_BUSY_TX){}
 

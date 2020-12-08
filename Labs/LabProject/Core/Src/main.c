@@ -78,14 +78,10 @@ const osMessageQueueAttr_t Message_Queue_attributes = {
   .name = "Message_Queue"
 };
 /* USER CODE BEGIN PV */
-char state = 'x';
 
-uint8_t cliBufferTX[100];
 uint8_t cliBufferRX[10];
 uint8_t save[40];
-int j = 0;
-uint8_t period_str[10];
-bool update = false;
+
 
 const char *CLEAR_SCREEN = "\x1b[2J";
 const char *SCROLL_WINDOW = "\x1b[10;r";
@@ -338,6 +334,7 @@ static void MX_GPIO_Init(void)
 void StartStateController(void *argument)
 {
   /* USER CODE BEGIN 5 */
+	char state = 'x';
 	uint16_t cmd = 101;
 	uint16_t msg = cmd;
 	int period = 400;
@@ -391,6 +388,7 @@ void StartStateController(void *argument)
 void StartRX_CLI(void *argument)
 {
   /* USER CODE BEGIN StartRX_CLI */
+	int j = 0;
 	uint16_t cmd = 0;
 	char* cmdStr;
 	char* arg;
@@ -434,12 +432,6 @@ void StartRX_CLI(void *argument)
 				if(arg == NULL && strcmp((char *)cmdStr, "help") == 0)
 				{
 					cmd = 102;
-//					printString("\n1. \"mode fsm\" switches controller\r");
-//					printString("\nto Failsafe mode\r\n");
-//					printString("\n2. \"mode scm\" switches controller\r");
-//					printString("\nto Static Cycle mode\r\n");
-//					printString("\n3. \"atm x\" enters accelerated test\r");
-//					printString("\nmode with multiplication factor x\r\n");
 					printString("1. \"mode fsm\" switches controller to Failsafe mode\r\n");
 					printString("\n2. \"mode scm\" switches controller to Static Cycle mode\r\n");
 					printString("\n3. \"atm x\" enters accelerated test mode with multiplication factor x, when 0 < x < 101\r\n");
@@ -492,38 +484,6 @@ void StartRX_CLI(void *argument)
 					printString((char *)temp);
 					printString("\r\n");
 				}
-
-//				if(strcmp((char *)save, "staticcycle\r") == 0)
-//				{
-//					cmd = 0;
-//					printString("Command read.\r");
-////					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
-////					{
-////						Error_Handler();
-////					}
-//				}
-//				else if(strcmp((char *)save, "failsafe\r") == 0)
-//				{
-//					cmd = 1;
-//					printString("Command read.");
-////					if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
-////					{
-////						Error_Handler();
-////					}
-//				}
-//				else if(strcmp((char *)save, "help\r") == 0)
-//				{
-//					printString("Help list************");
-//				}
-//				else
-//				{
-//					printString("Error message************");
-//				}
-
-//				if(osMessageQueuePut(Command_QueueHandle, &cmd, 1U, 0U)!= osOK)
-//				{
-//					Error_Handler();
-//				}
 
 				j = 0;
 				for(int i = 0; i < 20; i++)
