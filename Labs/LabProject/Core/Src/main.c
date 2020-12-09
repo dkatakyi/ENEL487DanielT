@@ -436,6 +436,7 @@ void StartRX_CLI(void *argument)
 					printString("1. \"mode fsm\" switches controller to Failsafe mode\r\n");
 					printString("\n2. \"mode scm\" switches controller to Static Cycle mode\r\n");
 					printString("\n3. \"atm x\" enters accelerated test mode with multiplication factor x, when 0 < x < 101\r\n");
+					printString("\n4. \"clear\" clears the scroll screen of its command history and brings the cursor back to the top\r\n");
 				}
 				else if(arg == NULL && strcmp((char *)cmdStr, "clear") == 0)
 				{
