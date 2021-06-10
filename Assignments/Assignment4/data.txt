@@ -1,0 +1,22 @@
+Enel 487 – Fall 2020 – Assign 4 Evaluating CRC code
+Handed Out: 2020-11-03 Due: 2020-11-12 23h55
+Read this article by Michael Barr, published in 2000, on Embedded.com. (If the link is broken, it’s ok because I’ve included the article in this handout.) He gives an overview of CRC algorithms and their implementation in C, and he presents 3 different implementations of the CRC algorithm: crcNaive(), crcSlow(), and crcFast().
+Very often in software projects we find particular subproblems have been solved by others, and the code is available under some form of license. This is one of those times.
+Requirements
+You are to do the following:
+1. Implement the last two of these algorithms (the slow and fast), in C or C++. As always, you should compile it in C++ regardless, and make sure you enable warnings, and make sure your code compiles with no warnings. You may choose not to do any actual programming for the algorithms, since the author’s code seems to work alright. It’s also possible, though not required, to write your own code. See if your code can beat the author’s.
+2. Write automated unit test code for each implementation. This code should test the correctness of the output of each function.
+3. Measure the implementation’s performance
+• on your personal computer, using your favourite compiler • on snoopy, using gcc or g++.
+• (optional) on the nucleo-64 f103rb board using gcc or g++.
+1
+You can use the clock function to measure time. You can read about this standard C function in any online source you like or type man 3 clock on snoopy. You should measure the average performance over a variety of sample inputs, since the speed may be data-dependent.
+I’ll provide a copy of Tolstoy’s “War and Peace” for you to try. This file is about 3.3MB so it easily fits into memory on a personal computer (though not on the f103rb), and it produces results of 0xD9DE, 0x4434, and 0x6811 D80D for the CCITT, CRC-16, and CRC-32 algorithms.
+If you want to compare the speed of a desktop and the f103rb, choose a smaller file that fits on the latter. The f103rb has only 20KiB of RAM; I suggest you create a file as an array in flash, copy it to RAM, then run the crc algorithms and time them. You can see if reading from Flash vs RAM exhibits any differences.
+Design your tests so the results of the different algorithms are comparable. You can use the ’size’ utility to measure the size of your program’s text, data, and bss sections.
+4. Make sure your measurement and unit test code is included as part of your submission
+5. Write a report summarizing your results.
+• Include all the particulars of your test method.
+• What are the performance characteristics of the three main CRC algo- rithms: CCITT, CRC-16 and CRC-32? (find MB/s and code size) I sug- gest using optimization level -O2 or -O3 for speed and -Os for size.
+• Could you legally include this code as a part of a project? What limitations has the author placed on its use?
+Submit your solution as usual, via your git cloud enel487 repository.
